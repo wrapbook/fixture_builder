@@ -41,9 +41,11 @@ class MagicalCreature < ActiveRecord::Base
 end
 
 def create_and_blow_away_old_db
-  ActiveRecord::Base.configurations['test'] = {
+  ActiveRecord::Base.configurations = {
+    'test' => {
       'adapter' => 'sqlite3',
       'database' => 'test.db'
+    }
   }
   ActiveRecord::Base.establish_connection(:test)
 
