@@ -115,4 +115,19 @@ class FixtureBuilderTest < Test::Unit::TestCase
       assert_equal first_modified_time, second_modified_time
     end
   end
+
+  def test_setting_created_at
+    create_and_blow_away_old_db
+    force_fixture_generation
+
+    FixtureBuilder.configure do |fbuilder|
+      fbuilder.files_to_check += Dir[test_path("*.rb")]
+      fbuilder.factory do
+        @mimic = MagicalCreature.create(:name => 'trix', :species => 'mimic')
+      end
+    end
+    generated_fixture = YAML.load(File.open(test_path("fixtures/magical_creatures.yml")))
+    assert_equal 'mimic', generated_fixture.keys.first
+    # todo: test something specific about the timestamps
+  end
 end
