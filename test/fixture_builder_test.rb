@@ -31,7 +31,7 @@ class FixtureBuilderTest < Test::Unit::TestCase
     FixtureBuilder.configure do |fbuilder|
       fbuilder.files_to_check += Dir[test_path("*.rb")]
       fbuilder.factory do
-        @king_of_gnomes = MagicalCreature.create(:name => 'robert', :species => 'gnome')
+        @king_of_gnomes = MagicalCreature.create(name:'robert', species: 'gnome')
       end
     end
     generated_fixture = YAML.load(File.open(test_path("fixtures/magical_creatures.yml")))
@@ -45,8 +45,8 @@ class FixtureBuilderTest < Test::Unit::TestCase
     FixtureBuilder.configure do |fbuilder|
       fbuilder.files_to_check += Dir[test_path("*.rb")]
       fbuilder.factory do
-        @enty = MagicalCreature.create(:name => 'Enty', :species => 'ent',
-                                       :powers => %w{shading rooting seeding})
+        @enty = MagicalCreature.create(name: 'Enty', species: 'ent',
+                                       powers: %w{shading rooting seeding})
       end
     end
     generated_fixture = YAML.load(File.open(test_path("fixtures/magical_creatures.yml")))
@@ -60,7 +60,7 @@ class FixtureBuilderTest < Test::Unit::TestCase
     FixtureBuilder.configure do |fbuilder|
       fbuilder.files_to_check += Dir[test_path("*.rb")]
       fbuilder.factory do
-        MagicalCreature.create(:name => 'Uni', :species => 'unicorn', :powers => %w{rainbows flying})
+        MagicalCreature.create(name: 'Uni', species: 'unicorn', powers: %w{rainbows flying})
       end
     end
     generated_fixture = YAML.load(File.open(test_path('fixtures/magical_creatures.yml')))
@@ -90,8 +90,8 @@ class FixtureBuilderTest < Test::Unit::TestCase
     FixtureBuilder.configure do |fbuilder|
       fbuilder.files_to_check += Dir[test_path("*.rb")]
       fbuilder.factory do
-        @enty = MagicalCreature.create(:name => 'Enty', :species => 'ent',
-                                       :powers => %w{shading rooting seeding})
+        @enty = MagicalCreature.create(name: 'Enty', species: 'ent',
+                                       powers: %w{shading rooting seeding})
       end
     end
     generated_fixture = YAML.load(File.open(test_path("fixtures/magical_creatures.yml")))
@@ -105,8 +105,8 @@ class FixtureBuilderTest < Test::Unit::TestCase
     FixtureBuilder.configure(use_sha1_digests: true) do |fbuilder|
       fbuilder.files_to_check += Dir[test_path("*.rb")]
       fbuilder.factory do
-        @enty = MagicalCreature.create(:name => 'Enty', :species => 'ent',
-                                       :powers => %w{shading rooting seeding})
+        @enty = MagicalCreature.create(name: 'Enty', species: 'ent',
+                                       powers: %w{shading rooting seeding})
       end
       first_modified_time = File.mtime(test_path("fixtures/magical_creatures.yml"))
       fbuilder.factory do
@@ -116,18 +116,45 @@ class FixtureBuilderTest < Test::Unit::TestCase
     end
   end
 
-  def test_setting_created_at
+  def test_system_timestamps_not_set
     create_and_blow_away_old_db
     force_fixture_generation
+
+    # this fork ignores updated_at times and also ignores created_at times unless they're
+    # being specifically set for a specific date in the past or future
+    unsafe_datetime = 18.hours.ago
 
     FixtureBuilder.configure do |fbuilder|
       fbuilder.files_to_check += Dir[test_path("*.rb")]
       fbuilder.factory do
-        @mimic = MagicalCreature.create(:name => 'trix', :species => 'mimic')
+        @wayward_mimic = MagicalCreature.create(name: 'trix', species: 'mimic',
+                                        created_at: unsafe_datetime, updated_at: Time.now)
       end
     end
     generated_fixture = YAML.load(File.open(test_path("fixtures/magical_creatures.yml")))
-    assert_equal 'mimic', generated_fixture.keys.first
-    # todo: test something specific about the timestamps
+    assert_equal 'wayward_mimic', generated_fixture.keys.first
+    assert_nil generated_fixture.values.first['updated_at']
+    assert_nil generated_fixture.values.first['created_at']
+  end
+
+  def test_created_at_set
+    create_and_blow_away_old_db
+    force_fixture_generation
+
+    # this fork ignores updated_at times and also ignores created_at times unless they're
+    # being specifically set for a specific date in the past or future
+    safe_datetime = 3.days.ago
+
+    FixtureBuilder.configure do |fbuilder|
+      fbuilder.files_to_check += Dir[test_path("*.rb")]
+      fbuilder.factory do
+        @wayward_mimic = MagicalCreature.create(name: 'trix', species: 'mimic',
+                                        created_at: safe_datetime, updated_at: Time.now)
+      end
+    end
+    generated_fixture = YAML.load(File.open(test_path("fixtures/magical_creatures.yml")))
+    assert_equal 'wayward_mimic', generated_fixture.keys.first
+    assert_nil generated_fixture.values.first['updated_at']
+    assert_equal safe_datetime, generated_fixture.values.first['created_at']
   end
 end
