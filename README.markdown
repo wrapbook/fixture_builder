@@ -84,9 +84,9 @@ FixtureBuilder.configure do |fbuilder|
 
   # now declare objects
   fbuilder.factory do
-    david = Factory(:user, :unique_name => "david")
-    ipod = Factory(:product, :name => "iPod")
-    Factory(:purchase, :user => david, :product => ipod)
+    david = Factory(:user, unique_name: "david")
+    ipod = Factory(:product, name: "iPod")
+    Factory(:purchase, user: david, product: ipod)
   end
 end
 ```    
@@ -118,8 +118,8 @@ You can also hint at a name or manually name an object.  Both of the following l
 work to rename `purchase_001` to `davids_ipod`:
 
 ```ruby
-fbuilder.name(:davids_ipod, Factory(:purchase, :user => david, :product => ipod))
-@davids_ipod = Factory(:purchase, :user => david, :product => ipod)
+fbuilder.name(:davids_ipod, Factory(:purchase, user: david, product: ipod))
+@davids_ipod = Factory(:purchase, user: david, product: ipod)
 ```
 
 Another way to name fixtures is to use the name_model_with. To use it you create a block that

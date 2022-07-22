@@ -101,7 +101,7 @@ module FixtureBuilder
             rows = table_klass.unscoped do
               table_klass.order(:id).all.collect do |obj|
                 attrs = obj.attributes.select { |attr_name| table_klass.column_names.include?(attr_name) }
-                attrs.inject({}) do |hash, (attr_name, value)|
+                attrs_except_system_timestamps(attrs).inject({}) do |hash, (attr_name, value)|
                   hash[attr_name] = serialized_value_if_needed(table_klass, attr_name, value)
                   hash
                 end
@@ -151,6 +151,16 @@ module FixtureBuilder
       File.open(fixture_file(table_name), 'w') do |file|
         file.write fixture_data.to_yaml
       end
+    end
+
+    def attrs_except_system_timestamps(attrs)
+      attrs.except!("updated_at")
+
+      if attrs["created_at"] && attrs["created_at"] >= 1.day.ago && attrs["created_at"].to_time <= Time.now
+        attrs.except!("created_at")
+      end
+
+      attrs
     end
 
     def fixture_file(table_name)
