@@ -32,11 +32,11 @@ class MagicalCreature < ActiveRecord::Base
   serialize :powers, Array
 
   if ActiveRecord::VERSION::MAJOR >= 4
-    default_scope -> { where(:deleted => false) }
+    default_scope -> { where(deleted: false) }
 
     attribute :virtual, ActiveRecord::Type::Integer.new
   else
-    default_scope :conditions => { :deleted => false }
+    default_scope :conditions => { deleted: false }
   end
 end
 
@@ -49,11 +49,11 @@ def create_and_blow_away_old_db
   }
   ActiveRecord::Base.establish_connection(:test)
 
-  ActiveRecord::Base.connection.create_table(:magical_creatures, :force => true) do |t|
+  ActiveRecord::Base.connection.create_table(:magical_creatures, force: true) do |t|
     t.column :name, :string
     t.column :species, :string
     t.column :powers, :string
-    t.column :deleted, :boolean, :default => false, :null => false
+    t.column :deleted, :boolean, default: false, null: false
     t.column :created_at, :datetime
     t.column :updated_at, :datetime
   end

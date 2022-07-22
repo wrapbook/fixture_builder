@@ -23,7 +23,7 @@ class LegacyFixtureModeTest < Test::Unit::TestCase
     FixtureBuilder.configure do |fbuilder|
       fbuilder.files_to_check += Dir[test_path("*.rb")]
       fbuilder.factory do
-        MagicalCreature.create :name => "Melinda", :species => "Philanthropist"
+        MagicalCreature.create(name: "Melinda", species: "Philanthropist")
       end
     end
     assert_equal 1, MagicalCreature.all.size
@@ -33,7 +33,7 @@ class LegacyFixtureModeTest < Test::Unit::TestCase
     FixtureBuilder.configure do |fbuilder|
       fbuilder.legacy_fixtures = Dir[test_path("legacy_fixtures/*.yml"), test_path("other_legacy_fixture_set/*.yml")] 
       fbuilder.factory do
-        MagicalCreature.create :name => "Barry", :species => "Party Guy"
+        MagicalCreature.create(name: "Barry", species: "Party Guy")
       end
     end
     assert_equal 4, MagicalCreature.all.size
