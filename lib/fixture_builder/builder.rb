@@ -154,8 +154,8 @@ module FixtureBuilder
     end
 
     def attrs_with_wrapbook_overrides(attrs, obj)
-      replace_encrypted_values!(attrs, obj)
-      replace_encrypted_attr_values!(attrs)
+      replace_encrypted_attr_values!(attrs, obj)
+      exclude_default_system_timestamps!(attrs)
 
       attrs
     end
