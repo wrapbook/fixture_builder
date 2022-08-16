@@ -101,7 +101,7 @@ module FixtureBuilder
             rows = table_klass.unscoped do
               table_klass.order(:id).all.collect do |obj|
                 attrs = obj.attributes.select { |attr_name| table_klass.column_names.include?(attr_name) }
-                attrs_except_system_timestamps(attrs).inject({}) do |hash, (attr_name, value)|
+                attrs_with_wrapbook_overrides(attrs, obj).inject({}) do |hash, (attr_name, value)|
                   hash[attr_name] = serialized_value_if_needed(table_klass, attr_name, value)
                   hash
                 end
@@ -153,14 +153,28 @@ module FixtureBuilder
       end
     end
 
-    def attrs_except_system_timestamps(attrs)
+    def attrs_with_wrapbook_overrides(attrs, obj)
+      replace_encrypted_values!(attrs, obj)
+      replace_encrypted_attr_values!(attrs)
+
+      attrs
+    end
+
+    def replace_encrypted_attr_values!(attrs, obj)
+      attrs.select {|k, v| k.match(/_(ciphertext|bidx)$/)}.each_pair do |key, value|
+        unencrypted_attr_name = key.delete_suffix("_ciphertext").delete_suffix("_bidx")
+        unencrypted_value     = obj.public_send(unencrypted_attr_name.to_sym)
+
+        attrs[key] = "<%= #{obj.class.name}.generate_#{key}(\"#{unencrypted_value}\").inspect %>"
+      end
+    end
+
+    def exclude_default_system_timestamps!(attrs)
       attrs.except!("updated_at")
 
       if attrs["created_at"] && attrs["created_at"] >= 1.day.ago && attrs["created_at"].to_time <= Time.now
         attrs.except!("created_at")
       end
-
-      attrs
     end
 
     def fixture_file(table_name)
