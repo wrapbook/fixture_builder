@@ -101,7 +101,7 @@ module FixtureBuilder
             rows = table_klass.unscoped do
               table_klass.order(order_by).all.collect do |obj|
                 attrs = obj.attributes.select { |attr_name| table_klass.column_names.include?(attr_name) }
-                attrs_with_wrapbook_overrides(attrs, obj).inject({}) do |hash, (attr_name, value)|
+                attrs_with_overrides(attrs, obj).inject({}) do |hash, (attr_name, value)|
                   hash[attr_name] = serialized_value_if_needed(table_klass, attr_name, value)
                   hash
                 end
@@ -114,7 +114,7 @@ module FixtureBuilder
 
           row_index = '000'
           fixture_data = rows.inject({}) do |hash, record|
-            hash.merge(record_name(record, table_name, row_index) => record)
+            hash.merge(record_name(record, table_name, row_index) => record_with_overrides!(record))
           end
 
           write_fixture_file fixture_data, table_name
@@ -153,7 +153,7 @@ module FixtureBuilder
       end
     end
 
-    def attrs_with_wrapbook_overrides(attrs, obj)
+    def attrs_with_overrides(attrs, obj)
       replace_encrypted_attr_values!(attrs, obj)
       exclude_default_system_timestamps!(attrs)
 
@@ -177,12 +177,41 @@ module FixtureBuilder
       end
     end
 
+    def record_with_overrides!(record)
+      use_generated_ids!(record) if @configuration.generate_ids
+
+      record
+    end
+
+    def use_generated_ids!(record)
+      # TODO: Any objects created by virtue of callbacks will need special treatment
+      record.except!("id")
+
+      record.select { |k, v| k.match(/_id$/)}.each_pair do |key, value|
+        id_to_lookup = record[key]
+
+        next if @namer.custom_name_ids[id_to_lookup].nil?
+        next if @configuration.generate_ids_excluded_column_names.include?(key)
+
+        key_prefix = key.delete_suffix("_id")
+
+        if (polymorphic_type = record["#{key_prefix}_type"]).present?
+          record[key_prefix] = "#{@namer.custom_name_ids[id_to_lookup]} (#{polymorphic_type})"
+          record.delete("#{key_prefix}_type")
+        else
+          record[key_prefix] = @namer.custom_name_ids[id_to_lookup]
+        end
+
+        record.delete(key)
+      end
+    end
+
     def fixture_file(table_name)
       fixtures_dir("#{table_name}.yml")
     end
 
     def order_by
-      order_by_created_at ? :created_at : :id
+      @configuration.generate_ids ? :created_at : :id
     end
   end
 end

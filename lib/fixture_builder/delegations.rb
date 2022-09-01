@@ -13,7 +13,7 @@ module FixtureBuilder
 
     module Namer
       def self.included(base)
-        base.delegate :record_name, :populate_custom_names, :name, :name_model_with, :to => :@namer
+        base.delegate :record_name, :populate_custom_names, :name, :name_model_with, :name_and_save, :to => :@namer
       end
     end
   end

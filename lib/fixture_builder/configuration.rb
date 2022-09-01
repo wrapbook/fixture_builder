@@ -17,7 +17,7 @@ module FixtureBuilder
 
     ACCESSIBLE_ATTRIBUTES = [:select_sql, :delete_sql, :skip_tables, :files_to_check, :record_name_fields,
                              :fixture_builder_file, :fixture_directory, :after_build, :legacy_fixtures, :model_name_procs,
-                             :write_empty_files, :order_by_created_at]
+                             :write_empty_files, :generate_ids, :generate_ids_excluded_column_names]
     attr_accessor(*ACCESSIBLE_ATTRIBUTES)
 
     SCHEMA_FILES = ['db/schema.rb', 'db/development_structure.sql', 'db/test_structure.sql', 'db/production_structure.sql']
@@ -27,7 +27,8 @@ module FixtureBuilder
       @use_sha1_digests = opts[:use_sha1_digests] || false
       @file_hashes = file_hashes
       @write_empty_files = true
-      @order_by_created_at = false
+      @generate_ids = false
+      @generate_ids_excluded_column_names = []
     end
 
     def include(*args)
