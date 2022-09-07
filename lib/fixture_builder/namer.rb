@@ -1,10 +1,14 @@
 module FixtureBuilder
   class Namer
+    include ActiveRecord::TestFixtures
     include Delegations::Configuration
+
+    attr_reader :custom_name_ids
 
     def initialize(configuration)
       @configuration = configuration
       @custom_names = {}
+      @custom_name_ids = {}
       @model_name_procs = {}
       @record_names = {}
     end
@@ -20,8 +24,18 @@ module FixtureBuilder
         key = [model_object.class.table_name, model_object.id]
         raise "Cannot set name for #{key.inspect} object twice" if @custom_names[key]
         @custom_names[key] = custom_name
+        @custom_name_ids[model_object.id] = custom_name
         model_object
       end
+    end
+
+    def name_and_save(custom_name, model_object)
+      model_object.id = ActiveRecord::FixtureSet.identify(custom_name)
+      model_object.save
+
+      name(custom_name, model_object)
+
+      model_object
     end
 
     def populate_custom_names(created_fixtures)
