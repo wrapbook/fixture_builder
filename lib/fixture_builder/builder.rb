@@ -190,7 +190,7 @@ module FixtureBuilder
       record.select { |k, v| k.match(/_id$/)}.each_pair do |key, value|
         id_to_lookup = record[key]
 
-        next if @namer.custom_name_ids[id_to_lookup].nil?
+        next if id_to_lookup && @namer.custom_name_ids[id_to_lookup].nil?
         next if @configuration.generate_ids_excluded_column_names.include?(key)
 
         key_prefix = key.delete_suffix("_id")
