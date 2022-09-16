@@ -129,7 +129,9 @@ module FixtureBuilder
 
     def serialized_value_if_needed(table_klass, attr_name, value)
       if table_klass.respond_to?(:type_for_attribute)
-        if table_klass.type_for_attribute(attr_name).type == :jsonb || table_klass.type_for_attribute(attr_name).type == :json
+        if value.is_a?(Numeric)
+          value
+        elsif table_klass.type_for_attribute(attr_name).type == :jsonb || table_klass.type_for_attribute(attr_name).type == :json
           value
         elsif table_klass.type_for_attribute(attr_name).respond_to?(:serialize)
           table_klass.type_for_attribute(attr_name).serialize(value)
@@ -154,10 +156,17 @@ module FixtureBuilder
     end
 
     def attrs_with_overrides(attrs, obj)
+      replace_big_decimal_attr_values!(attrs, obj)
       replace_encrypted_attr_values!(attrs, obj)
       exclude_default_system_timestamps!(attrs)
 
       attrs
+    end
+
+    def replace_big_decimal_attr_values!(attrs, obj)
+      attrs.select {|k, v| v.is_a?(BigDecimal)}.each_pair do |key, value|
+        attrs[key] = value.to_f
+      end
     end
 
     def replace_encrypted_attr_values!(attrs, obj)
