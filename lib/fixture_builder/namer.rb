@@ -70,6 +70,15 @@ module FixtureBuilder
       name.to_s
     end
 
+    def prepopulate_names_for_generate_ids(names)
+      return if names.blank?
+
+      names.each do |name|
+        id = ActiveRecord::FixtureSet.identify(name)
+        @custom_name_ids[id] = name
+      end
+    end
+
     protected
     def inferred_record_name(record_hash, table_name, row_index)
       record_name_fields.each do |try|

@@ -159,6 +159,7 @@ module FixtureBuilder
       replace_big_decimal_attr_values!(attrs, obj)
       replace_encrypted_attr_values!(attrs, obj)
       exclude_default_system_timestamps!(attrs)
+      exclude_nil_attr_values!(attrs)
 
       attrs
     end
@@ -184,6 +185,10 @@ module FixtureBuilder
       if attrs["created_at"] && attrs["created_at"] >= 1.day.ago && attrs["created_at"].to_time <= Time.now
         attrs.except!("created_at")
       end
+    end
+
+    def exclude_nil_attr_values!(attrs)
+      attrs.compact!
     end
 
     def record_with_overrides!(record)
